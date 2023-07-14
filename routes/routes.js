@@ -11,9 +11,10 @@ router.get("/", (req, res) => {
 
 //Post Method
 router.post("/post", async (req, res) => {
+  const radom = Math.ceil(Math.random() * 100);
   const data = new Model({
-    name: req.body.name,
-    age: req.body.age,
+    name: `test hint ${radom}`,
+    age: radom,
   });
 
   try {
