@@ -3,6 +3,12 @@ const express = require("express");
 const router = express.Router();
 const Model = require("../models/model");
 
+// home
+
+router.get("/", (req, res) => {
+  res.status(200).json("home page");
+});
+
 //Post Method
 router.post("/post", async (req, res) => {
   const data = new Model({
