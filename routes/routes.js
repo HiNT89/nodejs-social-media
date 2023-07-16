@@ -1,7 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
-const Model = require("../models/model");
+const Model = require("../models/index");
 
 // home
 
@@ -10,15 +10,22 @@ router.get("/", (req, res) => {
 });
 
 //Post Method
-router.post("/post", async (req, res) => {
-  const radom = Math.ceil(Math.random() * 100);
-  const data = new Model({
-    name: req.body.name,
-    age: req.body.age,
+router.post("/create-post", async (req, res) => {
+  const { description, userID, mediaURL } = req.body;
+  const post = new Model({
+    Description: description,
+    Type: type,
+    Media_url: mediaURL,
+    Interaction: {
+      Like: [],
+      Share: [],
+    },
+    CreateAt: new Date(),
+    User_create_id: userID,
   });
 
   try {
-    const dataToSave = await data.save();
+    const dataToSave = await post.save();
     res.status(200).json(dataToSave);
   } catch (error) {
     res.status(400).json({ message: error.message });
