@@ -1,7 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
-const Model = require("../models/index");
+const Post = require("../models/post");
 
 // home
 
@@ -11,8 +11,8 @@ router.get("/", (req, res) => {
 
 //Post Method
 router.post("/create-post", async (req, res) => {
-  const { description, userID, mediaURL } = req.body;
-  const post = new Model({
+  const { description, userID, mediaURL, type } = req.body;
+  const post = new Post({
     Description: description,
     Type: type,
     Media_url: mediaURL,
@@ -35,7 +35,7 @@ router.post("/create-post", async (req, res) => {
 //Get all Method
 router.get("/getAll", async (req, res) => {
   try {
-    const data = await Model.find();
+    const data = await Post.find();
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
