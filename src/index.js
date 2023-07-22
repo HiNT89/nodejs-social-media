@@ -29,14 +29,17 @@ app.use(bp.urlencoded({ extended: true }));
 // cors
 const cors = require("cors");
 var corsOptions = {
-  origin: `http://localhost:${process.env.PORT}`,
+  origin: [
+    `http://localhost:${process.env.PORT}`,
+    "https://nodejs-social-media-iota.vercel.app",
+  ],
 };
 app.use(cors(corsOptions));
 // router
 
-app.get("/",(req,res) => {
-  res.send("welcome to project social-media by hint")
-})
+app.get("/", (req, res) => {
+  res.send("welcome to project social-media by hint");
+});
 
 const routes = require("./routes");
 routes(app);
