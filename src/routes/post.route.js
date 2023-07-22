@@ -1,0 +1,11 @@
+const postController = require("../controllers/post.controller");
+const express = require("express");
+const { authJwt } = require("../middlewares");
+const router = express.Router();
+router.delete("/delete/:postID", postController.delete);
+router.patch("/remove/:postID", postController.remove);
+router.patch("/update/:postID", postController.update);
+router.post("/create", postController.create);
+router.get("/:postID", postController.getPostID);
+router.get("/", postController.index);
+module.exports = router;
