@@ -29,7 +29,8 @@ app.use(bp.urlencoded({ extended: true }));
 // cors
 const cors = require("cors");
 var corsOptions = {
-  origin: `http://localhost:${process.env.PORT}`,
+  // origin: `http://localhost:${process.env.PORT}`,
+  origin: `https://nodejs-social-media-iota.vercel.app/`,
 };
 app.use(cors(corsOptions));
 // router
