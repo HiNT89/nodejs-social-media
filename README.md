@@ -4,13 +4,15 @@ Feature : authentication , post, comment, message
 
 1 . signup 
 - /api/authe/signup
-- body : { username : string, password : string , email : string , roles ? : Array(string) }
-  + ROLES : user,admin,moderator
-- return object user
+  + body : { username : string, password : string , email : string , roles ? : Array(string) }
+    + ROLES : user,admin,moderator
+  + return object user
+  
 2 . signin
 - /api/auth/signin
-- body : {username , password}
-- return object  { ...user,accessToken,refreshTokenn}
+  + payload : {username , password}
+  + return object  { ...user,accessToken,refreshTokenn}
+
 3 . post
 - getAll : /api/post?_page?_limit
 - create : /api/post/create
@@ -19,6 +21,7 @@ Feature : authentication , post, comment, message
 - update : /api/post/update/:postID
 - remove : /api/post/remove/:postID (soft delete)
 - delete : /api/post/delete/:postID (delete)
+
 4 . comment
 - get array comment : /api/comment/:commentID
 - get commentDetail : /api/detail/:commentDetailID
@@ -26,6 +29,7 @@ Feature : authentication , post, comment, message
   + payload : {commentContent, userID, reply, commentID}
 - array commentDetail [POST] : /api/details
   + payload : {ids : commentDetailID[]}
+
 5. message
 - get messagae : /api/message/message/:messageID
 - get messageDetail : /api/messageDetail/:messageDetailID
