@@ -8,6 +8,71 @@ class PostController {
   getPostsUserID(req, res, next) {}
   // [GET] /post/feed/:userID
   getFeedUserID(req, res, next) {}
+  getAll(req, res, next) {
+    let dataPost = [];
+    Post.find({ isRemove: false })
+      .then((data) => {
+        const userCreateIds = data.map((item) => item.userCreateId);
+        dataPost = data;
+        return User.find({ _id: userCreateIds });
+      })
+      .then((listUser) => {
+        if (!listUser) {
+          res.status(400).send("user not found");
+        }
+        const response = dataPost.map((post) => {
+          const {
+            description,
+            type,
+            mediaUrl,
+            interaction,
+            createAt,
+            commentID,
+            userCreateId,
+          } = post;
+          const user = listUser.filter(
+            (user) => user._id.toString() === userCreateId.toString(),
+          )[0];
+
+          const { like, share } = interaction;
+          if (like.length) {
+            result.like = like.map(async (it) => {
+              const result = await User.findById(it).then((userData) => ({
+                userID: it,
+                username: matchUsername(userData),
+                imageURL: userData.imageURL,
+              }));
+              return result;
+            });
+          }
+          if (share.length) {
+            result.share = share.map(async (it) => {
+              const result = await User.findById(it).then((userData) => ({
+                userID: it,
+                username: matchUsername(userData),
+                imageURL: userData.imageURL,
+              }));
+              return result;
+            });
+          }
+
+          return {
+            username: matchUsername(user),
+            imageURL: user.imageURL,
+            userID: userCreateId,
+            createdAt: createAt,
+            typeFeed: type,
+            description,
+            mediaURL: mediaUrl,
+            commentID,
+            interaction: interaction,
+          };
+        });
+        res.status(200).json(response);
+        return;
+      })
+      .catch(next);
+  }
   // [GET] /post => get all post
   index(req, res, next) {
     const { _page, _limit } = req.query;

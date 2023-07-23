@@ -7,5 +7,6 @@ router.patch("/remove/:postID", postController.remove);
 router.patch("/update/:postID", postController.update);
 router.post("/create", postController.create);
 router.get("/:postID", postController.getPostID);
+router.get("/getAll", postController.getAll);
 router.get("/", postController.index);
 module.exports = router;
