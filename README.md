@@ -1,3 +1,7 @@
+Project use nodejs (express) , mongoose , mongoDB , JWT
+
+Feature : authentication , post, comment, message
+
 1 . signup 
 - /api/authe/signup
 - body : { username : string, password : string , email : string , roles ? : Array(string) }
