@@ -2,8 +2,8 @@ const db = require("../models");
 const { user: User, commentDetail: CommentDetail } = db;
 const userFunction = require("./user.function");
 const { matchUsername } = require("./function");
-class messageFunction {
-  findMessageDetail = async (id) => {
+class commentFunction {
+  findCommentDetail = async (id) => {
     let result;
     await CommentDetail.findById(id)
       .then(async (dataCommentDetail) => {
@@ -23,7 +23,7 @@ class messageFunction {
     return result;
   };
 
-  findListMessageDetail = async (ids) => {
+  findListCommentDetail = async (ids) => {
     let result;
     let listCommentDetail = [];
     let listUser = [];
@@ -53,4 +53,4 @@ class messageFunction {
     return result;
   };
 }
-module.exports = new messageFunction();
+module.exports = new commentFunction();

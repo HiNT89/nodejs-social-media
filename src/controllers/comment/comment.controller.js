@@ -1,5 +1,5 @@
 const db = require("../../models");
-const { findListMessageDetail } = require("../../utils/message.function");
+const { findListCommentDetail } = require("../../utils/comment.function");
 const { comment: Comment } = db;
 class CommentController {
   // [GET] /comment/getArrCmt/:commentID ====> get arr commentDetailID
@@ -12,7 +12,7 @@ class CommentController {
   // [GET] /comment/getArrCmtDt ====> get arr commentDetail
   async getArrCmtDt(req, res, next) {
     const ids = req.body.ids;
-    const response = await findListMessageDetail(ids);
+    const response = await findListCommentDetail(ids);
     res.status(200).json(response);
   }
   // ===> create comment default when create post return commentID

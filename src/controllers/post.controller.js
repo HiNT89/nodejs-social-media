@@ -1,8 +1,8 @@
 const db = require("../models");
 const { matchUsername } = require("../utils/function");
-const { post: Post, user: User } = db;
+const { post: Post, user: User, comment: Comment } = db;
 const commentController = require("./comment/comment.controller");
-const commentDetailIDController = require("./comment/commentDetail.controller");
+const { findListCommentDetail } = require("./../utils/comment.function");
 class PostController {
   // [GET] /post/profile/:userID => get list post by user create
   getPostsUserID(req, res, next) {}
@@ -70,6 +70,10 @@ class PostController {
             interaction: interaction,
           };
         });
+        if (!_page || !_limit) {
+          res.status(200).json(response);
+          return;
+        }
 
         const totalPage = Math.ceil(response.length / _limit);
         if (_page > totalPage || _page < 1) {
@@ -88,21 +92,20 @@ class PostController {
   }
   // [GET] /post/:postID => get post by post ID
   getPostID(req, res, next) {
-    // let postItem;
-    // let listCmtDetail;
-    // Post.findOne({ _id: req.params.postID })
-    //   .then((data) => {
-    //     postItem = data;
-    //     return commentController.getComment(data.commentID);
-    //   })
-    //   .then((arrCommentDetail) =>
-    //     commentDetailIDController.getCommentDetail(arrCommentDetail),
-    //   )
-    //   .then((listCMTDetail) => {
-    //     listCmtDetail = listCMTDetail;
-    //     return 
-    //   })
-    //   .catch(next);
+    const id = req.params.postID;
+    let postItem;
+    Post.findById(id)
+      .then((data) => {
+        postItem = data;
+        console.log(data.commentID);
+        return Comment.findById(data.commentID);
+      })
+      .then((objectComment) => findListCommentDetail(objectComment.listComment))
+      .then((listCMTDetail) => {
+        res.status(200).json({ ...postItem._doc, listComment: listCMTDetail });
+        return;
+      })
+      .catch(next);
   }
   // [POST] /post/create => create new post
   async create(req, res, next) {

@@ -1,12 +1,15 @@
 const db = require("../../models");
 const { commentDetail: CommentDetail } = db;
 const commentController = require("./comment.controller");
-const messageFunction = require("../../utils/message.function");
+const {
+  findCommentDetail,
+  findListCommentDetail,
+} = require("../../utils/comment.function");
 class CommentDetailController {
   //  get comment detail by comment id => return commentID
   async getCommentDetail(req, res, next) {
     const id = req.params.commentDetailID;
-    const response = await messageFunction.findMessageDetail(id);
+    const response = await messageFunction.findCommentDetail(id);
     if (!response) {
       res.status(400).send("error !");
       return;
