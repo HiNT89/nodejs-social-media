@@ -15,24 +15,24 @@ class PostController {
     let dataPost = [];
     Post.find({ isRemove: false })
       .then((data) => {
-        const userCreateIds = data.map((item) => item.userCreateId);
-        dataPost = data;
-
+        // const userCreateIds = data.map((item) => item.userCreateId);
+        // dataPost = data;
+        const response = { ...data._doc };
         if (!_page || !_limit) {
           res.status(200).json(data);
           return;
         }
 
-        const totalPage = Math.ceil(data.length / _limit);
+        const totalPage = Math.ceil(response.length / _limit);
         if (_page > totalPage || _page < 1) {
           res.status(400).send("page not found");
           return;
         }
-        if (_limit < 1 || _limit > data.length) {
+        if (_limit < 1 || _limit > response.length) {
           res.status(400).send("limit not error");
           return;
         }
-        res.status(200).json(data.slice((_page - 1) * _limit, _page * _limit));
+        res.status(200).json(response.slice((_page - 1) * _limit, _page * _limit));
         // return findListUser(userCreateIds);
       })
       // .then((listUser) => {
