@@ -19,11 +19,11 @@ class PostController {
         dataPost = data;
 
         if (!_page || !_limit) {
-          res.status(200).json(response);
+          res.status(200).json(data);
           return;
         }
 
-        const totalPage = Math.ceil(response.length / _limit);
+        const totalPage = Math.ceil(data.length / _limit);
         if (_page > totalPage || _page < 1) {
           res.status(400).send("page not found");
           return;
