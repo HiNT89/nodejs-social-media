@@ -13,16 +13,17 @@ class PostController {
   index(req, res, next) {
     const { _page, _limit } = req.query;
     let dataPost;
-    Post.find({ isRemove: false })
-      .then((data) => {
+    res.send("index")
+   // Post.find({ isRemove: false })
+    //  .then((data) => {
         // const userCreateIds = data.reduce((array, item) => {
         //   const { like, share } = item.interaction;
         //   return [...array, item.userCreateId, ...like, ...share];
         // }, []);
         
-        res.json(data);
+     //   res.json(data);
         // return findListUser(userCreateIds);
-      })
+    // })
       // .then((listUser) => {
       //   if (!listUser) {
       //     res.status(400).send("user not found");
@@ -102,7 +103,7 @@ class PostController {
       //     .status(200)
       //     .json(response.slice((_page - 1) * _limit, _page * _limit));
       // })
-      .catch(next);
+    //  .catch(next);
   }
   // [GET] /post/:postID => get post by post ID
   getPostID(req, res, next) {
