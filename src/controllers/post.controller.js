@@ -49,8 +49,8 @@ class PostController {
               )[0];
               return {
                 userID: it,
-                username: matchUsername(userData),
-                imageURL: userData.imageURL,
+                username: matchUsername(userData || {}),
+                imageURL: userData?.imageURL,
               };
             });
           }
@@ -68,8 +68,8 @@ class PostController {
           }
 
           return {
-            username: matchUsername(user),
-            imageURL: user.imageURL,
+            username: matchUsername(user || {}),
+            imageURL: user?.imageURL,
             userID: userCreateId,
             createdAt: createAt,
             typeFeed: type,
