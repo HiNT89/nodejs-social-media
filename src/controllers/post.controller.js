@@ -15,14 +15,14 @@ class PostController {
     let dataPost;
     Post.find({ isRemove: false })
       .then((data) => {
-        const userCreateIds = data.reduce((array, item) => {
-          const { like, share } = item.interaction;
-          return [...array, item.userCreateId, ...like, ...share];
-        }, []);
+        // const userCreateIds = data.reduce((array, item) => {
+        //   const { like, share } = item.interaction;
+        //   return [...array, item.userCreateId, ...like, ...share];
+        // }, []);
         dataPost = data;
         res.json({
           dataPost,
-          userCreateIds,
+          // userCreateIds,
         });
         // return findListUser(userCreateIds);
       })
