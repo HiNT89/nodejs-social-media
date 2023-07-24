@@ -71,7 +71,7 @@ class PostController {
         res.status(200).json(response);
         return;
       })
-      .catch(next);
+      .catch((error) => res.send(error));
   }
   // [GET] /post => get all post
   index(req, res, next) {
