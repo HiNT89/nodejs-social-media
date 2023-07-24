@@ -11,7 +11,7 @@ class PostController {
   getFeedUserID(req, res, next) {}
   // [GET] /post => get all post
   index(req, res, next) {
-    // const { _page, _limit } = req.query;
+    const { _page, _limit } = req.query;
     let dataPost;
     Post.find({ isRemove: false })
       .then((data) => {
