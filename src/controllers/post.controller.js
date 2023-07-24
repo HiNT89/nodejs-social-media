@@ -17,60 +17,7 @@ class PostController {
       .then((data) => {
         const userCreateIds = data.map((item) => item.userCreateId);
         dataPost = data;
-        return findListUser(userCreateIds);
-      })
-      .then((listUser) => {
-        if (!listUser) {
-          res.status(400).send("user not found");
-        }
-        const response = dataPost.map((post) => {
-          const {
-            description,
-            type,
-            mediaUrl,
-            interaction,
-            createAt,
-            commentID,
-            userCreateId,
-          } = post;
-          const user = listUser.filter(
-            (user) => user._id.toString() === userCreateId.toString(),
-          )[0];
 
-          const { like, share } = interaction;
-          if (like.length) {
-            result.like = like.map(async (it) => {
-              const result = await User.findById(it).then((userData) => ({
-                userID: it,
-                username: matchUsername(userData),
-                imageURL: userData.imageURL,
-              }));
-              return result;
-            });
-          }
-          if (share.length) {
-            result.share = share.map(async (it) => {
-              const result = await User.findById(it).then((userData) => ({
-                userID: it,
-                username: matchUsername(userData),
-                imageURL: userData.imageURL,
-              }));
-              return result;
-            });
-          }
-
-          return {
-            username: matchUsername(user),
-            imageURL: user.imageURL,
-            userID: userCreateId,
-            createdAt: createAt,
-            typeFeed: type,
-            description,
-            mediaURL: mediaUrl,
-            commentID,
-            interaction: interaction,
-          };
-        });
         if (!_page || !_limit) {
           res.status(200).json(response);
           return;
@@ -81,14 +28,83 @@ class PostController {
           res.status(400).send("page not found");
           return;
         }
-        if (_limit < 1 || _limit > response.length) {
+        if (_limit < 1 || _limit > data.length) {
           res.status(400).send("limit not error");
           return;
         }
-        res
-          .status(200)
-          .json(response.slice((_page - 1) * _limit, _page * _limit));
+        res.status(200).json(data.slice((_page - 1) * _limit, _page * _limit));
+        // return findListUser(userCreateIds);
       })
+      // .then((listUser) => {
+      //   if (!listUser) {
+      //     res.status(400).send("user not found");
+      //   }
+      //   const response = dataPost.map((post) => {
+      //     const {
+      //       description,
+      //       type,
+      //       mediaUrl,
+      //       interaction,
+      //       createAt,
+      //       commentID,
+      //       userCreateId,
+      //     } = post;
+      //     const user = listUser.filter(
+      //       (user) => user._id.toString() === userCreateId.toString(),
+      //     )[0];
+
+      //     const { like, share } = interaction;
+      //     if (like.length) {
+      //       result.like = like.map(async (it) => {
+      //         const result = await User.findById(it).then((userData) => ({
+      //           userID: it,
+      //           username: matchUsername(userData),
+      //           imageURL: userData.imageURL,
+      //         }));
+      //         return result;
+      //       });
+      //     }
+      //     if (share.length) {
+      //       result.share = share.map(async (it) => {
+      //         const result = await User.findById(it).then((userData) => ({
+      //           userID: it,
+      //           username: matchUsername(userData),
+      //           imageURL: userData.imageURL,
+      //         }));
+      //         return result;
+      //       });
+      //     }
+
+      //     return {
+      //       username: matchUsername(user),
+      //       imageURL: user.imageURL,
+      //       userID: userCreateId,
+      //       createdAt: createAt,
+      //       typeFeed: type,
+      //       description,
+      //       mediaURL: mediaUrl,
+      //       commentID,
+      //       interaction: interaction,
+      //     };
+      //   });
+      //   if (!_page || !_limit) {
+      //     res.status(200).json(response);
+      //     return;
+      //   }
+
+      //   const totalPage = Math.ceil(response.length / _limit);
+      //   if (_page > totalPage || _page < 1) {
+      //     res.status(400).send("page not found");
+      //     return;
+      //   }
+      //   if (_limit < 1 || _limit > response.length) {
+      //     res.status(400).send("limit not error");
+      //     return;
+      //   }
+      //   res
+      //     .status(200)
+      //     .json(response.slice((_page - 1) * _limit, _page * _limit));
+      // })
       .catch(next);
   }
   // [GET] /post/:postID => get post by post ID
