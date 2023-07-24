@@ -19,11 +19,8 @@ class PostController {
         //   const { like, share } = item.interaction;
         //   return [...array, item.userCreateId, ...like, ...share];
         // }, []);
-        dataPost = data;
-        res.json({
-          dataPost,
-          // userCreateIds,
-        });
+        
+        res.json(data);
         // return findListUser(userCreateIds);
       })
       // .then((listUser) => {
