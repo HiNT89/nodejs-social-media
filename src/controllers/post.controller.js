@@ -3,7 +3,7 @@ const { matchUsername } = require("../utils/function");
 const { post: Post, user: User, comment: Comment } = db;
 const commentController = require("./comment/comment.controller");
 const { findListCommentDetail } = require("./../utils/comment.function");
-const { findListUser } = require("../utils/user.function");
+const { findListUser, findUser } = require("../utils/user.function");
 class PostController {
   // [GET] /post/profile/:userID => get list post by user create
   getPostsUserID(req, res, next) {}
@@ -13,14 +13,19 @@ class PostController {
   index(req, res, next) {
     const { _page, _limit } = req.query;
     let dataPost;
+    let listComments;
     Post.find({ isRemove: false })
       .then((data) => {
-        const userCreateIds = data.reduce((array, item) => {
+        dataPost = data;
+        const commentIDs = data.map((x) => x.commentID);
+        return Comment.find({ _id: commentIDs });
+      })
+      .then((arrCMT) => {
+        listComments = arrCMT;
+        const userCreateIds = dataPost.reduce((array, item) => {
           const { like, share } = item.interaction;
           return [...array, item.userCreateId, ...like, ...share];
         }, []);
-        dataPost = data;
-
         return findListUser(userCreateIds);
       })
       .then((listUser) => {
@@ -36,6 +41,7 @@ class PostController {
             createAt,
             commentID,
             userCreateId,
+            _id,
           } = post;
           const user = listUser.filter(
             (user) => user._id.toString() === userCreateId.toString(),
@@ -43,9 +49,9 @@ class PostController {
 
           const { like, share } = interaction;
           if (like.length) {
-            result.like = like.map(async (it) => {
+            interaction.like = like.map(async (it) => {
               const userData = await listUser.filter(
-                (x) => x._id.toString() === it.toString(),
+                (x) => x._id.toString() === it?.toString(),
               )[0];
               return {
                 userID: it,
@@ -55,7 +61,7 @@ class PostController {
             });
           }
           if (share.length) {
-            result.share = share.map(async (it) => {
+            interaction.share = share.map(async (it) => {
               const userData = await listUser.filter(
                 (x) => x._id.toString() === it.toString(),
               )[0];
@@ -66,7 +72,6 @@ class PostController {
               };
             });
           }
-
           return {
             username: matchUsername(user || {}),
             imageURL: user?.imageURL,
@@ -76,7 +81,11 @@ class PostController {
             description,
             mediaURL: mediaUrl,
             commentID,
+            listComment: listComments.filter(
+              (x) => x._id.toString() === commentID.toString(),
+            )[0].listComment,
             interaction: interaction,
+            id: _id,
           };
         });
         if (!_page || !_limit) {
@@ -100,7 +109,7 @@ class PostController {
         }
         res
           .status(200)
-          .json(response.slice((_page - 1) * _limit, _page * _limit));
+          .json(response.reverse().slice((_page - 1) * _limit, _page * _limit));
       })
       .catch(next);
   }
@@ -108,16 +117,23 @@ class PostController {
   getPostID(req, res, next) {
     const id = req.params.postID;
     let postItem;
+    let response;
     Post.findById(id)
       .then((data) => {
         postItem = data;
-        console.log(data.commentID);
         return Comment.findById(data.commentID);
       })
       .then((objectComment) => findListCommentDetail(objectComment.listComment))
       .then((listCMTDetail) => {
-        res.status(200).json({ ...postItem._doc, listComment: listCMTDetail });
-        return;
+        response = { ...postItem._doc, listComment: listCMTDetail };
+
+        return findUser(response.userCreateId);
+      })
+      .then((dataUser) => {
+        response.username = matchUsername(dataUser);
+        response.imageURL = dataUser.imageURL;
+        response.id = response._id;
+        res.status(200).json(response);
       })
       .catch(next);
   }

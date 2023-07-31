@@ -5,7 +5,7 @@ const userController = require("../controllers/user.controller");
 
 router.get("/listProfile", userController.listProfileUser);
 router.get("/:userID", userController.profileUser);
-router.post("/update/:userID", userController.update);
+router.patch("/update/:userID", userController.update);
 // router.get("/all", userController.all);
 // router.get("/user", [authJwt.verifyToken], userController.user);
 // router.get(

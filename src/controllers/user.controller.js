@@ -1,13 +1,35 @@
 const db = require("../models");
 const User = db.user;
 const userFunction = require("../utils/user.function");
+const { matchUsername } = require("../utils/function");
 class UserController {
   // get profile user
   async profileUser(req, res, next) {
     const id = req.params.userID;
-    const dataUser = await userFunction.findUser(id);
-    res.status(200).json(dataUser);
+    console.log("call api");
+    let userData;
+    const dataUser = await userFunction
+      .findUser(id)
+      .then((user) => {
+        userData = user;
+        return userFunction.findListUser(user.friends);
+      })
+      .then((listUser) => {
+        userData.friends = userData.friends.map((it) => {
+          const item = listUser.filter(
+            (x) => x._id.toString() === it.toString(),
+          )[0];
+          return {
+            userID: it,
+            fullName: matchUsername(item),
+            isOnline: true,
+            imageURL: item.imageURL,
+          };
+        });
+        res.status(200).json(userData);
+      });
   }
+
   // get list profile user
   async listProfileUser(req, res, next) {
     const ids = req.body.listUserID;
