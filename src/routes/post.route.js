@@ -1,0 +1,12 @@
+const postController = require("../controllers/post.controller");
+const express = require("express");
+const { authJwt } = require("../middlewares");
+const router = express.Router();
+router.delete("/delete/:postID", [authJwt.verifyToken], postController.delete);
+router.patch("/remove/:postID", [authJwt.verifyToken], postController.remove);
+router.patch("/update/:postID", [authJwt.verifyToken], postController.update);
+router.post("/create", [authJwt.verifyToken], postController.create);
+router.get("/search", [authJwt.verifyToken], postController.search);
+router.get("/", [authJwt.verifyToken], postController.index);
+router.get("/:postID", [authJwt.verifyToken], postController.getPostID);
+module.exports = router;
