@@ -25,7 +25,8 @@ verifyToken = (req, res, next) => {
     if (err) {
       return catchError(err, res);
     }
-    req.userId = decoded.id;
+    req.userID = decoded.id;
+    
     next();
   });
 };

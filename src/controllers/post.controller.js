@@ -1,183 +1,116 @@
 const db = require("../models");
-const { matchUsername } = require("../utils/function");
-const { post: Post, user: User, comment: Comment } = db;
-const commentController = require("./comment/comment.controller");
-const { findListCommentDetail } = require("./../utils/comment.function");
-const { findListUser, findUser } = require("../utils/user.function");
+const { post: Post, information: Information, profile: Profile } = db;
 class PostController {
-  // [GET] /post/profile/:userID => get list post by user create
-  getPostsUserID(req, res, next) {}
-  // [GET] /post/feed/:userID
-  getFeedUserID(req, res, next) {}
-  // [GET] /post => get all post
-  index(req, res, next) {
+  // [GET] /post
+  async index(req, res, next) {
     const { _page, _limit } = req.query;
-    let dataPost;
-    let listComments;
-    Post.find({ isRemove: false })
-      .then((data) => {
-        dataPost = data;
-        const commentIDs = data.map((x) => x.commentID);
-        return Comment.find({ _id: commentIDs });
-      })
-      .then((arrCMT) => {
-        listComments = arrCMT;
-        const userCreateIds = dataPost.reduce((array, item) => {
-          const { like, share } = item.interaction;
-          return [...array, item.userCreateId, ...like, ...share];
-        }, []);
-        return findListUser(userCreateIds);
-      })
-      .then((listUser) => {
-        if (!listUser) {
-          res.status(400).send("user not found");
-        }
-        const response = dataPost.map((post) => {
-          const {
-            description,
-            type,
-            mediaUrl,
-            interaction,
-            createAt,
-            commentID,
-            userCreateId,
-            _id,
-          } = post;
-          const user = listUser.filter(
-            (user) => user._id.toString() === userCreateId.toString(),
-          )[0];
+    let limit = _limit ?? 1;
+    let page = _page ?? 1;
+    try {
+      const posts = await Post.find({ isRemove: false }).populate("userID");
 
-          const { like, share } = interaction;
-          if (like.length) {
-            interaction.like = like.map(async (it) => {
-              const userData = await listUser.filter(
-                (x) => x._id.toString() === it?.toString(),
-              )[0];
-              return {
-                userID: it,
-                username: matchUsername(userData || {}),
-                imageURL: userData?.imageURL,
-              };
-            });
-          }
-          if (share.length) {
-            interaction.share = share.map(async (it) => {
-              const userData = await listUser.filter(
-                (x) => x._id.toString() === it.toString(),
-              )[0];
-              return {
-                userID: it,
-                username: matchUsername(userData),
-                imageURL: userData.imageURL,
-              };
-            });
-          }
-          return {
-            username: matchUsername(user || {}),
-            imageURL: user?.imageURL,
-            userID: userCreateId,
-            createdAt: createAt,
-            typeFeed: type,
-            description,
-            mediaURL: mediaUrl,
-            commentID,
-            listComment: listComments.filter(
-              (x) => x._id.toString() === commentID.toString(),
-            )[0].listComment,
-            interaction: interaction,
-            id: _id,
-          };
-        });
-        if (!_page || !_limit) {
-          res.status(200).json(response);
-          return;
-        }
-
-        if (!_page || !_limit) {
-          res.status(200).json(data);
-          return;
-        }
-
-        const totalPage = Math.ceil(response.length / _limit);
-        if (_page > totalPage || _page < 1) {
-          res.status(400).send("page not found");
-          return;
-        }
-        if (_limit < 1 || _limit > response.length) {
-          res.status(400).send("limit not error");
-          return;
-        }
-        res
-          .status(200)
-          .json(response.reverse().slice((_page - 1) * _limit, _page * _limit));
-      })
-      .catch(next);
+      const totalPage = Math.ceil(posts.length / _limit);
+      if (page > totalPage) page = totalPage;
+      if (page < 0) page = 1;
+      if (limit > posts.length) limit = posts.length;
+      if (limit < 0) limit = 1;
+      res
+        .status(200)
+        .json(posts.reverse().slice((page - 1) * limit, page * limit));
+    } catch (e) {
+      res.status(400).send(e);
+    }
   }
   // [GET] /post/:postID => get post by post ID
   getPostID(req, res, next) {
     const id = req.params.postID;
-    let postItem;
-    let response;
+    let dataPostItem;
+    if (typeof id !== "string")
+      return res.status(400).send("postId not validate");
     Post.findById(id)
-      .then((data) => {
-        postItem = data;
-        return Comment.findById(data.commentID);
-      })
-      .then((objectComment) => findListCommentDetail(objectComment.listComment))
-      .then((listCMTDetail) => {
-        response = { ...postItem._doc, listComment: listCMTDetail };
+      .populate("commentIDs")
+      .populate("userID")
+      .then((dataRes) => {
+        dataPostItem = dataRes._doc;
 
-        return findUser(response.userCreateId);
+        const userIDs = dataPostItem.commentIDs.map((it) => it.userID);
+
+        return Information.find({
+          _id: { $in: userIDs },
+        });
       })
-      .then((dataUser) => {
-        response.username = matchUsername(dataUser);
-        response.imageURL = dataUser.imageURL;
-        response.id = response._id;
-        res.status(200).json(response);
+      .then((users) => {
+        dataPostItem.commentIDs = dataPostItem.commentIDs.map((it) => {
+          const { avatar, firstName, lastName, middleName } = users.filter(
+            (x) => x._id.toString() === it.userID.toString(),
+          )[0];
+          const result = {
+            avatar,
+            firstName,
+            lastName,
+            middleName,
+            ...it._doc,
+          };
+          return result;
+        });
+
+        res.status(200).json(dataPostItem);
       })
       .catch(next);
   }
-  // [POST] /post/create => create new post
   async create(req, res, next) {
-    const commentID = await commentController.createComment();
-    const { description, userCreateId, mediaUrl, type } = req.body;
+    const id = req.userID;
+    const { description, mediaURL } = req.body;
     const post = new Post({
       description,
-      type,
-      mediaUrl,
+      mediaURL,
+      createdAt: new Date(),
+      userID: id,
+      commentIDs: [],
+      type: "public",
       interaction: {
         like: [],
         share: [],
       },
-      remove: false,
-      createAt: new Date(),
-      userCreateId: userCreateId,
-      commentID,
+      isRemove: false,
     });
-    post
-      .save()
-      .then((data) => {
-        const dataPost = data;
-        res.status(200).json(dataPost);
-      })
-      .catch(next);
+    try {
+      const postRes = await post.save();
+      const profileRes = await Profile.findById(id);
+      profileRes.listPost = [...profileRes.listPost, postRes._id];
+      await profileRes.save();
+      res.status(200).send({ message: "create post success!!!!" });
+    } catch (e) {
+      res.send(e);
+    }
   }
   // [PATCH] /post/update/:postID => update post
   update(req, res, next) {
-    try {
-      const id = req.params.postID;
-      const updatedData = req.body;
-      Post.findById(id)
-        .then((result) => {
-          const arrKey = Object.keys(updatedData);
-          arrKey.forEach((key) => (result[key] = updatedData[key]));
-          return result.save();
-        })
-        .then((data) => res.json(data))
-        .catch(next);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
+    const id = req.params.postID;
+    const updatedData = req.body;
+    const listKeysValidate = [
+      "description",
+      "mediaURL",
+      "commentIDs",
+      "interaction",
+      "type",
+      "isRemove",
+    ];
+    const keys = Object.keys(updatedData);
+    keys.forEach((it) => {
+      const checkPayload = listKeysValidate.includes(it);
+      if (!checkPayload) {
+        return res.status(400).send({ massage: "payload error" });
+      }
+    });
+    Post.findById(id)
+      .then((result) => {
+        const arrKey = Object.keys(updatedData);
+        arrKey.forEach((key) => (result[key] = updatedData[key]));
+        return result.save();
+      })
+      .then(() => res.send({ message: "update success" }))
+      .catch(next);
   }
   // [DELETE] /post/delete/:postID => delete post
   delete(req, res, next) {
@@ -186,7 +119,7 @@ class PostController {
       .then(() => res.send("delete success !"))
       .catch((err) => res.send(err));
   }
-  // [Delete] /post/remove/:postID => soft delete post
+  // [PATCH] /post/remove/:postID => soft delete post
   remove(req, res, next) {
     const id = req.params.postID;
     Post.findById(id)
@@ -197,20 +130,17 @@ class PostController {
       .then(() => res.send("remove success !"))
       .catch(next);
   }
+  // [GET] /post/search
+  // param ?
+  search(req, res, next) {
+    const { q, _limit } = req.query;
+    const limit = _limit ?? 5;
+    Post.find({ $text: { $search: q } })
+      .then((result) => {
+        res.status(200).json(result.slice(0, limit));
+      })
+      .catch((e) => res.status(400).send(e));
+  }
 }
 
 module.exports = new PostController();
-
-// if (data.comment) {
-//   const dataComment = commentController
-//     .getComment(data.comment)
-//     .then((dataComment) => dataComment)
-//     .catch(next);
-//   const dataRes = {
-//     ...data,
-//     comment: dataComment,
-//   };
-//   res.json(dataRes);
-// } else {
-//   res.json(data);
-// }

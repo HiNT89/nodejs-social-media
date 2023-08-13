@@ -31,6 +31,7 @@ const cors = require("cors");
 var corsOptions = {
   origin: [
     `http://localhost:${process.env.PORT}`,
+    `http://localhost:3000}`,
     "https://nodejs-social-media-iota.vercel.app",
   ],
 };

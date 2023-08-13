@@ -2,20 +2,25 @@ const express = require("express");
 const router = express.Router();
 const { authJwt } = require("../middlewares");
 const userController = require("../controllers/user.controller");
+router.get("/profile/:userID", [authJwt.verifyToken], userController.profile);
+router.patch("/add-friend", [authJwt.verifyToken], userController.addFriend);
+router.patch("/unfriend", [authJwt.verifyToken], userController.deleteFriend);
+router.get("/friends", [authJwt.verifyToken], userController.friends);
+router.patch(
+  "/update-password",
+  [authJwt.verifyToken],
+  userController.updatePassword,
+);
+router.patch(
+  "/update-info",
+  [authJwt.verifyToken],
+  userController.updateInformation,
+);
+router.patch(
+  "/update-profile",
+  [authJwt.verifyToken],
+  userController.updateProfile,
+);
+router.get("/", [authJwt.verifyToken], userController.index);
 
-router.get("/listProfile", userController.listProfileUser);
-router.get("/:userID", userController.profileUser);
-router.patch("/update/:userID", userController.update);
-// router.get("/all", userController.all);
-// router.get("/user", [authJwt.verifyToken], userController.user);
-// router.get(
-//   "/admin",
-//   [authJwt.verifyToken, authJwt.isAdmin],
-//   userController.admin,
-// );
-// router.get(
-//   "/moderator",
-//   [authJwt.verifyToken, authJwt.isModerator],
-//   userController.moderator,
-// );
 module.exports = router;

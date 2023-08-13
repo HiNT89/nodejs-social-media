@@ -1,5 +1,5 @@
 const db = require("../models");
-const Role = db.role;
+const { role: Role } = db;
 
 class Initial {
   index() {

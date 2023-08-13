@@ -1,10 +1,17 @@
+const {
+  THUMBNAIL_DEFAULT,
+  AVATAR_MEN_DEFAULT,
+  AVATAR_WOMEN_DEFAULT,
+  AVATAR_OTHER_DEFAULT,
+} = require("../utils/constants");
 const db = require("../models");
 const config = require("../config/auth.config");
 const {
   user: User,
   role: Role,
+  information: Information,
+  profile: Profile,
   refreshToken: RefreshToken,
-  message: Message,
 } = db;
 var jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -19,37 +26,38 @@ class AuthController {
       middleName,
       firstName,
       lastName,
-      imageURL,
       phoneNumber,
       gender,
       birthday,
     } = req.body;
     const user = new User({
-      username: username ?? null,
-      email: email,
-      password: password ? bcrypt.hashSync(password, 8) : null,
+      username,
+      password: bcrypt.hashSync(password, 8),
+      messageID: [],
       createdAt: new Date(),
+      friends: [],
+      email,
+    });
+    const information = new Information({
       middleName,
       firstName,
-      imageURL,
-      gender,
       lastName,
       phoneNumber,
+      gender,
       birthday,
-      followers: [],
-      friends: [],
-      followings: [],
     });
-    const message = new Message({
-      listBoxMessage: [],
+    if (gender === "male") {
+      information.avatar = AVATAR_MEN_DEFAULT;
+    } else if (gender === "female") {
+      information.avatar = AVATAR_WOMEN_DEFAULT;
+    } else {
+      information.avatar = AVATAR_OTHER_DEFAULT;
+    }
+    const profile = new Profile({
+      thumbnail: THUMBNAIL_DEFAULT,
+      description: "",
+      listPost: [],
     });
-
-    await message
-      .save()
-      .then((data) => {
-        user.messageID = data._id;
-      })
-      .catch(next);
     if (roles) {
       Role.find({
         name: { $in: roles },
@@ -60,7 +68,13 @@ class AuthController {
           user
             .save()
             .then((data) => {
-              res.json(data);
+              information._id = data._id;
+              profile._id = data._id;
+              return information.save();
+            })
+            .then(() => profile.save())
+            .then(() => {
+              res.status(200).json({ message: "signup success" });
             })
             .catch(next);
         })
@@ -75,9 +89,14 @@ class AuthController {
           user
             .save()
             .then((data) => {
-              const response = data._doc;
-              res.json({ ...response, password: "*******" });
-            }) // test show all data
+              information.userID = data._id;
+              profile.userID = data._id;
+              return information.save();
+            })
+            .then(() => profile.save())
+            .then(() => {
+              res.status(200).json({ message: "signup success" });
+            })
             .catch(next);
         })
         .catch(next);
@@ -86,16 +105,18 @@ class AuthController {
   //
   signin(req, res, next) {
     const { username, password } = req.body;
+    if (!username || !password)
+      return res.status(400).send("payload not validate");
+    let dataUser;
     User.findOne({
       username: username,
     })
-      .populate("roles", "-__v")
-      .exec()
+      .populate("roles")
       .then(async (user) => {
         if (!user) {
           return res.status(404).send({ message: "User Not found." });
         }
-        var passwordIsValid = bcrypt.compareSync(password, user.password);
+        const passwordIsValid = bcrypt.compareSync(password, user.password);
 
         if (!passwordIsValid) {
           return res.status(401).send({
@@ -103,40 +124,35 @@ class AuthController {
             message: "Invalid Password!",
           });
         }
-
-        const token = jwt.sign({ id: user.id }, config.secret, {
+        dataUser = user;
+        return Information.findOne({
+          _id: user._id,
+        });
+      })
+      .then(async (information) => {
+        const token = jwt.sign({ id: dataUser._id }, config.secret, {
           expiresIn: config.jwtExpiration, // 1p
         });
-        let refreshToken = await RefreshToken.createToken(user);
+        let refreshToken = await RefreshToken.createToken(dataUser);
         var authorities = [];
 
-        for (let i = 0; i < user.roles.length; i++) {
-          authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
+        for (let i = 0; i < dataUser.roles.length; i++) {
+          authorities.push("ROLE_" + dataUser.roles[i].name.toUpperCase());
         }
-        const {
-          middleName,
-          firstName,
-          lastName,
-          imageURL,
-          phoneNumber,
-          gender,
-          birthday,
-        } = user;
-        res.status(200).send({
-          id: user._id,
-          username: user.username,
-          email: user.email,
-          roles: authorities,
+        const response = {
           accessToken: token,
           refreshToken: refreshToken,
-          middleName,
-          firstName,
-          lastName,
-          imageURL,
-          phoneNumber,
-          gender,
-          birthday,
-        });
+          id: dataUser._id,
+          middleName: information.middleName,
+          firstName: information.firstName,
+          lastName: information.lastName,
+          gender: information.gender,
+          avatar: information.avatar,
+          birthday: information.birthday,
+          phoneNumber: information.phoneNumber,
+          roles: authorities,
+        };
+        res.status(200).json(response);
       });
   }
   async refreshToken(req, res) {

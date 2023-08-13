@@ -1,11 +1,8 @@
-const messageController = require("../controllers/message/message.controller");
-const messageDetailController = require("../controllers/message/messageDetail.controller");
+const messageController = require("../controllers/message.controller");
 const express = require("express");
 const { authJwt } = require("../middlewares");
 const router = express.Router();
-router.get("/messageDetail/:messageDetailID", messageDetailController.get);
-router.get("/message/:messageID", messageController.get);
-router.post("/send", messageDetailController.update);
-router.post("/create-message-detail", messageDetailController.create);
-router.post("/create-message", messageController.create);
+router.post("/send", [authJwt.verifyToken], messageController.send);
+router.get("/:messageID", [authJwt.verifyToken], messageController.index);
+router.get("/", [authJwt.verifyToken], messageController.listMessage);
 module.exports = router;

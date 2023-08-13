@@ -1,13 +1,17 @@
-const commentController = require("../controllers/comment/comment.controller");
-const commentDetailController = require("../controllers/comment/commentDetail.controller");
+const commentController = require("../controllers/comment.controller");
 const express = require("express");
 const { authJwt } = require("../middlewares");
 const router = express.Router();
-router.get(
-  "/detail/:commentDetailID",
-  commentDetailController.getCommentDetail,
+router.post("/create", [authJwt.verifyToken], commentController.create);
+router.delete(
+  "/delete/:commentID",
+  [authJwt.verifyToken],
+  commentController.delete,
 );
-router.post("/details", commentController.getArrCmtDt);
-router.post("/create", commentDetailController.createCommentDetail);
-router.get("/:commentID", commentController.getArrCmt);
+router.patch(
+  "/update/:commentID",
+  [authJwt.verifyToken],
+  commentController.update,
+);
+
 module.exports = router;
